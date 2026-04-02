@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+
+*_results*.json
+biomistral_results.pdf
+
+.vscode/
