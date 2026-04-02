@@ -1,5 +1,7 @@
 import google.generativeai as genai
 from mistralai import Mistral
+import time
+from mistralai.models.sdkerror import SDKError
 
 class GeminiAttacker:
     def __init__(self, api_key, model_name="gemini-2.5-flash", system_prompt=None):
@@ -21,19 +23,38 @@ class MistralAttacker:
         self.system_prompt = system_prompt
 
     def generate(self, system_prompt, user_prompt):
-        messages = []
-        if self.system_prompt or system_prompt:
-            messages.append({
-                "role": "system",
-                "content": system_prompt or self.system_prompt
-            })
-        messages.append({
-            "role": "user",
-            "content": user_prompt
-        })
-        
-        response = self.client.chat.complete(
-            model=self.model_name,
-            messages=messages
-        )
-        return response.choices[0].message.content
+
+        for attempt in range(5):
+
+            try:
+
+                response = self.client.chat.complete(
+
+                    model=self.model_name,
+
+                    messages=[
+                        {"role":"system","content":system_prompt},
+                        {"role":"user","content":user_prompt}
+                    ],
+
+                    temperature=1.1,
+                    max_tokens=800
+
+                )
+
+                return response.choices[0].message.content
+
+            except SDKError as e:
+
+                if "429" in str(e):
+
+                    wait = 5 * (attempt + 1)
+
+                    print(f"Rate limited. Sleeping {wait}s")
+
+                    time.sleep(wait)
+
+                else:
+                    raise
+
+        return None

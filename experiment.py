@@ -3,10 +3,14 @@ from attack import generate_attack_prompts, adaptive_attack_loop
 from system_prompts import SYSTEM_PROMPTS       
 from target import TargetModel
 import json
-from dotenv import loadenv
-loadenv()
+import os
+from dotenv import load_dotenv
+load_dotenv()
 attacker = MistralAttacker(api_key=os.getenv("API_KEY"))
-target = TargetModel(base_url="http://localhost:8000/v1/chat/completions")
+target = TargetModel(
+    base_url="http://localhost:8000/v1/completions",
+    model_name="epfl-llm/meditron-7b"
+)
 
 for attack_type in ("direct", "role_play", "cot_hijacking"):
         
@@ -23,6 +27,6 @@ for attack_type in ("direct", "role_play", "cot_hijacking"):
             )
             results.append(result)
 
-        filename = f'{attack_type}_results.json'
+        filename = f'{attack_type}_results_meditron.json'
         with open(filename, 'w') as json_file:
             json.dump(results, json_file, indent=4)
